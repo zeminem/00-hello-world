@@ -1,72 +1,20 @@
 name: Run Tests
 
 on:
-  pull_request_target:
+  pull_request:
     branches:
       - main
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        node-version: [18.x]
-
     steps:
-      # This manually fetches and checks out the code from the PR
-      - name: Checkout PR Merge Commit
+      - name: Checkout Code
         uses: actions/checkout@v2
-        with:
-          ref: refs/pull/${{ github.event.pull_request.number }}/merge
 
-      # Rest of your setup steps
-      - name: Setup caching for node_modules
-        uses: actions/cache@v2
-        with:
-          path: node_modules
-          key: ${{ runner.os }}-node-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-${{ matrix.node-version }}-
-
-      - name: Set up Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v2
-        with:
-          node-version: ${{ matrix.node-version }}
-
-      - name: Install dependencies
+      - name: Install Dependencies
         run: npm install
 
-      - name: Run tests
+      - name: Run Tests
         run: npm run test:remote
-        id: tests
-        continue-on-error: true
-
-      - name: Set result
-        id: result
-        run: |
-          if [[ "${{ steps.tests.outcome }}" == "success" ]]; then
-            echo "state=passed" >> $GITHUB_ENV
-          else
-            echo "state=failed" >> $GITHUB_ENV
-          fi
-
-      - name: Comment PR with feedback
-        if: always() # this ensures the step runs even if previous steps fail
-        uses: actions/github-script@v5
-        with:
-          github-token: ${{secrets.BAE_PAT}}
-          script: |
-            const { owner, repo, number } = context.issue;
-            let conclusion = process.env.state === 'passed' ? 'passed 🎉' : 'failed 🥺';
-            const output = `Your tests ${conclusion}.`
-            github.rest.issues.createComment({
-              owner,
-              repo,
-              issue_number: number,
-              body: output
-            });
-
-      - name: Fail workflow if tests failed
-        if: env.state == 'failed'
-        run: exit 1
