@@ -14,15 +14,11 @@ jobs:
         node-version: [18.x]
 
     steps:
-      # This checks out the code in the base branch (e.g., main)
-      - name: Checkout repository
-        uses: actions/checkout@v2
-
       # This manually fetches and checks out the code from the PR
-      - name: Manually checkout PR
-        run: |
-          git fetch origin ${GITHUB_REF}:pr_branch
-          git checkout pr_branch
+      - name: Checkout PR Merge Commit
+        uses: actions/checkout@v2
+        with:
+          ref: refs/pull/${{ github.event.pull_request.number }}/merge
 
       # Rest of your setup steps
       - name: Setup caching for node_modules
