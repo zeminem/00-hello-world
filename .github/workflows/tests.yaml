@@ -7,16 +7,24 @@ on:
 
 jobs:
   build:
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
 
     strategy:
       matrix:
         node-version: [18.x]
 
     steps:
-      - name: Checkout code
+      # This checks out the code in the base branch (e.g., main)
+      - name: Checkout repository
         uses: actions/checkout@v2
 
+      # This manually fetches and checks out the code from the PR
+      - name: Manually checkout PR
+        run: |
+          git fetch origin ${GITHUB_REF}:pr_branch
+          git checkout pr_branch
+
+      # Rest of your setup steps
       - name: Setup caching for node_modules
         uses: actions/cache@v2
         with:
@@ -42,10 +50,8 @@ jobs:
         id: result
         run: |
           if [[ "${{ steps.tests.outcome }}" == "success" ]]; then
-            echo "grade=A" >> $GITHUB_ENV
             echo "state=passed" >> $GITHUB_ENV
           else
-            echo "grade=F" >> $GITHUB_ENV
             echo "state=failed" >> $GITHUB_ENV
           fi
 
@@ -56,8 +62,8 @@ jobs:
           github-token: ${{secrets.BAE_PAT}}
           script: |
             const { owner, repo, number } = context.issue;
-            let conclusion = process.env.state === 'passed' ? 'A' : 'F';
-            const output = `Your tests ${conclusion === 'A' ? 'passed 🎉' : 'failed 🥺'}.\n\nYour grade: ${conclusion}.`
+            let conclusion = process.env.state === 'passed' ? 'passed 🎉' : 'failed 🥺';
+            const output = `Your tests ${conclusion}.`
             github.rest.issues.createComment({
               owner,
               repo,
