@@ -53,7 +53,7 @@ jobs:
         if: always() # this ensures the step runs even if previous steps fail
         uses: actions/github-script@v5
         with:
-          github-token: ${{secrets.GITHUB_TOKEN}}
+          github-token: ${{secrets.BAE_PAT}}
           script: |
             const { owner, repo, number } = context.issue;
             let conclusion = process.env.state === 'passed' ? 'A' : 'F';
