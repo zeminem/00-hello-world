@@ -4,7 +4,7 @@
   "description": "Get started with Javascript",
   "scripts": {
     "start": "npm install",
-    "test:local": "open SpecRunner.html",
+    "test:local": "start SpecRunner.html",
     "test:remote": "karma start"
   },
   "keywords": [],
